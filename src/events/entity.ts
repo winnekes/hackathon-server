@@ -7,6 +7,7 @@ import {
 } from 'typeorm';
 import { BaseEntity } from 'typeorm/repository/BaseEntity';
 import { IsString, IsDate, IsOptional } from 'class-validator';
+
 import User from '../users/entity';
 import Trip from '../trips/entity';
 import Image from '../images/entity';
@@ -33,11 +34,9 @@ export default class Event extends BaseEntity {
     @Column('varchar', { nullable: true })
     note: string;
 
-    @IsDate()
     @Column('timestamp')
     startsAt: Date;
 
-    @IsDate()
     @Column('timestamp')
     endsAt: Date;
 

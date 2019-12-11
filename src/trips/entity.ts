@@ -35,11 +35,9 @@ export default class Trip extends BaseEntity {
     @Column('varchar', { nullable: true })
     note: string;
 
-    @IsDate()
     @Column('timestamp')
     startsAt: Date;
 
-    @IsDate()
     @Column('timestamp')
     endsAt: Date;
 

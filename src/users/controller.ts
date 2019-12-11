@@ -39,7 +39,6 @@ export default class UserController {
             await entity.setPassword(password);
             return await entity.save();
         } catch (err) {
-            // todo: check for error type (duplicate?)
             console.log(err);
             response.status = 400;
             response.body = { message: 'Cannot create this user.' };
