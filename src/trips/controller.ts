@@ -14,6 +14,8 @@ import {
 import { OpenAPI } from 'routing-controllers-openapi/build/decorators';
 import User from '../users/entity';
 import Trip from './entity';
+import { Like, getManager } from 'typeorm';
+import { userInfo } from 'os';
 
 @JsonController()
 @OpenAPI({
@@ -23,16 +25,20 @@ export default class TripController {
     @Authorized()
     @Get('/trips')
     async getAllTrips(@CurrentUser() user: User) {
-        const trip = await Trip.find({
-            relations: ['events', 'events.images', 'members'],
-            where: {
-                user,
-            },
+        const trips = await Trip.find({
+            relations: ['creator', 'members', 'events'],
         });
-        if (!trip) {
+
+        if (
+            trips.find(trip =>
+                trip.members.find(member => member.id === user.id)
+            ) ||
+            trips.find(trip => trip.creator.id === user.id)
+        ) {
+            return trips;
+        } else {
             throw new NotFoundError('No trip were not found.');
         }
-        return trip;
     }
 
     @Authorized()
