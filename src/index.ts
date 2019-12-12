@@ -8,6 +8,7 @@ import LoginController from './logins/controller';
 import SpecController from './specs/controllers';
 import TripController from './trips/controller';
 import EventController from './events/controller';
+import ImageController from './images/controller';
 
 const port = process.env.PORT;
 
@@ -18,6 +19,7 @@ const app = createKoaServer({
         LoginController,
         TripController,
         EventController,
+        ImageController,
         SpecController,
     ],
     authorizationChecker: (action: Action) => {

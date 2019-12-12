@@ -26,9 +26,10 @@ export default class Trip extends BaseEntity {
     @Column('text')
     destination: string;
 
+    @IsOptional()
     @IsUrl()
     @Column('varchar')
-    image: string;
+    image?: string;
 
     @IsOptional()
     @IsString()

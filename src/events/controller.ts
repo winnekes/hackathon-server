@@ -40,6 +40,7 @@ export default class EventController {
                     user,
                     trip,
                 });
+                console.log(entity);
                 return await entity.save();
             } else
                 throw new NotFoundError('Cannot find the trip for this event');

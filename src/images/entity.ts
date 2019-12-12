@@ -1,6 +1,6 @@
 import {
     Entity,
-    PrimaryGeneratedColumn,
+    PrimaryColumn,
     Column,
     ManyToOne,
     OneToMany,
@@ -15,12 +15,16 @@ import User from '../users/entity';
 
 @Entity()
 export default class Image extends BaseEntity {
-    @PrimaryGeneratedColumn()
-    id?: number;
+    @PrimaryColumn()
+    id: string;
 
     @IsString()
     @Column('varchar')
     url: string;
+
+    @IsString()
+    @Column('text')
+    mimeType: string;
 
     @IsOptional()
     @IsString()
@@ -32,11 +36,11 @@ export default class Image extends BaseEntity {
     createdAt: Date;
 
     @IsOptional()
-    @Column('float8')
+    @Column('float8', { nullable: true })
     latitude?: number;
 
     @IsOptional()
-    @Column('float8')
+    @Column('float8', { nullable: true })
     longitude?: number;
 
     @ManyToOne(

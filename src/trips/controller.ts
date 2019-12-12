@@ -14,7 +14,7 @@ import {
 import { OpenAPI } from 'routing-controllers-openapi/build/decorators';
 import User from '../users/entity';
 import Trip from './entity';
-import { Like, getManager } from 'typeorm';
+import { Like, getManager, Raw } from 'typeorm';
 import { userInfo } from 'os';
 
 @JsonController()
@@ -25,20 +25,17 @@ export default class TripController {
     @Authorized()
     @Get('/trips')
     async getAllTrips(@CurrentUser() user: User) {
-        const trips = await Trip.find({
-            relations: ['creator', 'members', 'events'],
-        });
+        // todo: figure out how to query in many to many relation, typeorm doc is not clear
 
-        if (
-            trips.find(trip =>
-                trip.members.find(member => member.id === user.id)
-            ) ||
-            trips.find(trip => trip.creator.id === user.id)
-        ) {
-            return trips;
-        } else {
-            throw new NotFoundError('No trip were not found.');
-        }
+        return (
+            await Trip.find({
+                relations: ['creator', 'members', 'events', 'events.images'],
+            })
+        ).filter(
+            trip =>
+                trip.creator.id === user.id ||
+                trip.members.some(u => u.id === user.id)
+        );
     }
 
     @Authorized()
@@ -49,6 +46,7 @@ export default class TripController {
         @Body() trip: Trip,
         @Res() response: any
     ) {
+        console.log(trip);
         try {
             const entity = Trip.create({
                 ...trip,
@@ -70,17 +68,24 @@ export default class TripController {
     @Post('/trips/:id/member')
     async addMemberToTrip(
         @Param('id') id: number,
-        @CurrentUser()
-        user: User,
+        @Body() user: Partial<User>,
         @Res() response: any
     ) {
         try {
             const entity = await Trip.findOne(id, { relations: ['members'] });
             if (!entity) throw new NotFoundError('Cannot find trip.');
+            console.log(user);
 
-            return await Trip.merge(entity, {
-                members: [...entity.members, user],
-            }).save();
+            console.log('trip', entity);
+            const fuser = await User.findOne({
+                where: { username: user.username },
+            });
+            console.log('found user', fuser);
+            if (fuser) {
+                return await Trip.merge(entity, {
+                    members: [...entity.members, fuser],
+                }).save();
+            }
         } catch (err) {
             console.log(err);
             response.status = 400;
