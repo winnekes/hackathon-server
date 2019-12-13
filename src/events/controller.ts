@@ -73,7 +73,7 @@ export default class EventController {
         }
 
         response.body = {
-            tripName: trip.title,
+            tripTitle: trip.title,
             tripStart: trip.startsAt,
             tripEnd: trip.endsAt,
             slides: events
@@ -83,7 +83,7 @@ export default class EventController {
                             title: event.title,
                             url: image.url,
                             lat: image.latitude,
-                            long: image.longitude,
+                            lng: image.longitude,
                             note: image.note,
                             date: image.createdAt,
                             eventStart: event.startsAt,
