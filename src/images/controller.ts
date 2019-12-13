@@ -83,10 +83,29 @@ export default class ImageController {
         console.log(await image.save());
         ctx.type = 'application/json';
         response.status = 201;
-        response.body = { url: image.url };
+        response.body = { url: image.url, fileName };
         return response;
     }
 
+    @Authorized()
+    @Put('/images/:fileName')
+    async updateImageFile(
+        @Param('fileName') fileName: string,
+        @CurrentUser() user: User,
+        @Body() image: Partial<Image>,
+        @Res() response: any
+    ) {
+        const entity = await Image.findOne(fileName, { where: { user } });
+        if (entity) {
+            return await Image.merge(entity, image).save();
+        } else {
+            response.status = 404;
+            response.body = {
+                message: `File ${fileName} does not exist`,
+            };
+            return response;
+        }
+    }
     @Get('/images/:fileName')
     async getImageFile(
         @Ctx() ctx: any,
@@ -107,5 +126,31 @@ export default class ImageController {
             response.body = fs.readFileSync(path);
         }
         return response;
+    }
+
+    @Authorized()
+    @Delete('/images/:fileName')
+    async deleteImage(
+        @Param('fileName') fileName: string,
+        @CurrentUser() user: User,
+        @Res() response: any
+    ) {
+        try {
+            if ((await Image.delete({ id: fileName, user })).affected === 0) {
+                throw new NotFoundError('Could not find image to delete.');
+            }
+            response.body = {
+                message: 'Successfully deleted the image',
+            };
+            return response;
+        } catch (err) {
+            console.log(err);
+            response.status = 404;
+            response.body = {
+                message: 'Could not find image to delete.',
+            };
+
+            return response;
+        }
     }
 }
