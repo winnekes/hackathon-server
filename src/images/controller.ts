@@ -18,6 +18,7 @@ import { OpenAPI } from 'routing-controllers-openapi/build/decorators';
 import User from '../users/entity';
 import Image from './entity';
 import Event from '../events/entity';
+import * as exifr from 'exifr';
 
 const fs = require('fs');
 const multer = require('koa-multer');
@@ -38,30 +39,44 @@ export default class ImageController {
         @Res() response: any
     ) {
         const fileName = uuidv1();
-        console.log(fileName);
-        console.log(Object.keys(file));
-        fs.writeFile(
-            `/media/simona/DATA/travelin-images/${fileName}`,
-            file.buffer,
-            err => {
-                if (err) {
-                    console.log('image upload failed:', err);
-                    response.status = 500;
-                    response.body = {
-                        message: 'File upload failed.',
-                    };
-                }
+        const path = `/media/simona/DATA/travelin-images/${fileName}`;
+        const url = `/images/${fileName}`;
+        await fs.writeFile(path, file.buffer, async err => {
+            if (err) {
+                console.log('image upload failed:', err);
+                response.status = 500;
+                response.body = {
+                    message: 'File upload failed.',
+                };
+                return;
             }
-        );
-        const image = Image.create();
-        image.id = fileName;
-        image.mimeType = file.mimetype;
-        image.createdAt = new Date();
-        const event = await Event.findOne(eventId);
-        if (event) image.event = event;
-        image.url = `/images/${fileName}`;
-        image.user = user;
-        return image.save();
+            const image = Image.create();
+            image.id = fileName;
+            image.mimeType = file.mimetype;
+            image.createdAt = new Date();
+            const event = await Event.findOne(eventId);
+            if (event) image.event = event;
+            image.url = url;
+            image.user = user;
+            image.private = false;
+
+            const exifResult = await exifr.parse(path);
+            console.log(exifResult);
+            if (exifResult.DateTimeOriginal) {
+                image.createdAt = exifResult.DateTimeOriginal;
+            } else if (exifResult.timestamp) {
+                image.createdAt = exifResult.timestamp;
+            }
+            if (exifResult.latitude && exifResult.longitude) {
+                image.latitude = exifResult.latitude;
+                image.longitude = exifResult.longitude;
+            }
+            console.log(await image.save());
+        });
+
+        response.status = 201;
+        response.body = { url };
+        return response;
     }
 
     @Get('/images/:fileName')
@@ -82,17 +97,6 @@ export default class ImageController {
         } else {
             ctx.type = image.mimeType;
             response.body = fs.readFileSync(path);
-            //     , function(err, data) {
-            //     if (err) {
-            //         response.status = 500;
-            //         response.body = {
-            //             message: `File ${fileName} could not be retrieved`,
-            //         };
-            //         return response;
-            //     } else {
-            //         response.body = data;
-            //     }
-            // });
         }
         return response;
     }

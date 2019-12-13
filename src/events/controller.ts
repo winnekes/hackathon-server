@@ -54,6 +54,51 @@ export default class EventController {
         }
     }
 
+    @Get('/trips/:id/slides')
+    async getSlides(@Param('id') tripId: number, @Res() response: any) {
+        const trip = await Trip.findOne(tripId, { where: { private: false } });
+        if (!trip) {
+            response.status = 404;
+            response.body = {
+                message: 'Trip not found or private',
+            };
+            return;
+        }
+        const events = await Event.find({
+            where: { trip },
+            relations: ['images'],
+        });
+        if (!events || events.length === 0) {
+            return;
+        }
+
+        response.body = {
+            tripName: trip.title,
+            tripStart: trip.startsAt,
+            tripEnd: trip.endsAt,
+            slides: events
+                .flatMap(event =>
+                    event.images.map(image => {
+                        return {
+                            title: event.title,
+                            url: image.url,
+                            lat: image.latitude,
+                            long: image.longitude,
+                            note: image.note,
+                            date: image.createdAt,
+                            eventStart: event.startsAt,
+                            eventEnd: event.endsAt,
+                            private: image.private,
+                        };
+                    })
+                )
+                .filter(slide => !slide.private),
+        };
+
+        console.log(response);
+        return response;
+    }
+
     @Authorized()
     @Put('/events/:id')
     async updateEvent(

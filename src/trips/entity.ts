@@ -57,4 +57,7 @@ export default class Trip extends BaseEntity {
         event => event.trip
     )
     events: Event[];
+
+    @Column('boolean')
+    private: boolean;
 }

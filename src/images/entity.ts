@@ -54,4 +54,7 @@ export default class Image extends BaseEntity {
         event => event.images
     )
     event: Event;
+
+    @Column('boolean')
+    private: boolean;
 }
