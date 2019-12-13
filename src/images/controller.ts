@@ -65,14 +65,20 @@ export default class ImageController {
         const exifResult = await exifr.parse(file.buffer);
         console.log('buf', file.buffer);
         console.log('exif', exifResult);
-        if (exifResult.DateTimeOriginal) {
-            image.createdAt = exifResult.DateTimeOriginal;
-        } else if (exifResult.timestamp) {
-            image.createdAt = exifResult.timestamp;
-        }
-        if (exifResult.latitude && exifResult.longitude) {
-            image.latitude = exifResult.latitude;
-            image.longitude = exifResult.longitude;
+        if (exifResult) {
+            if (exifResult.DateTimeOriginal) {
+                image.createdAt = exifResult.DateTimeOriginal;
+            } else if (exifResult.timestamp) {
+                image.createdAt = exifResult.timestamp;
+            }
+            if (exifResult.latitude && exifResult.longitude) {
+                image.latitude = exifResult.latitude;
+                image.longitude = exifResult.longitude;
+            }
+        } else {
+            image.createdAt = new Date();
+            image.latitude = 52.3667;
+            image.longitude = 4.8945;
         }
         console.log(await image.save());
         ctx.type = 'application/json';
