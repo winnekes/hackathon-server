@@ -19,11 +19,13 @@ import User from '../users/entity';
 import Image from './entity';
 import Event from '../events/entity';
 import * as exifr from 'exifr';
+import Trip from '../trips/entity';
 
 const fs = require('fs');
 const multer = require('koa-multer');
 const uuidv1 = require('uuid/v1');
 const upload = multer({ dest: 'uploads/' });
+const PDFDocument = require('pdfkit');
 
 @JsonController()
 @OpenAPI({
@@ -40,7 +42,7 @@ export default class ImageController {
         @Res() response: any
     ) {
         const fileName = uuidv1();
-        const path = `/media/simona/DATA/travelin-images/${fileName}`;
+        const path = `./travelin-images/${fileName}`;
         const url = `/images/${fileName}`;
         await fs.writeFile(path, file.buffer, err => {
             if (err) {
@@ -113,7 +115,7 @@ export default class ImageController {
         @Res() response: any
     ) {
         console.log(fileName);
-        const path = `/media/simona/DATA/travelin-images/${fileName}`;
+        const path = `./travelin-images/${fileName}`;
         const image = await Image.findOne(fileName);
         if (!fs.existsSync(path) || !image) {
             response.status = 404;
@@ -126,6 +128,34 @@ export default class ImageController {
             response.body = fs.readFileSync(path);
         }
         return response;
+    }
+
+    @Authorized()
+    @Get('/itinary/:id')
+    async createPDF(@Param('id') tripId: number) {
+        const doc = new PDFDocument();
+
+        const fileName = `${uuidv1()}.pdf`;
+        doc.pipe(fs.createWriteStream(fileName));
+
+        const trip = await Trip.findOne(tripId, {
+            relations: ['events'],
+        });
+
+        if (trip) {
+            let itineraryText = `Your trip itinerary: ${trip.title}\n\n\n`; // \n is newline
+            trip.events.forEach(event => {
+                itineraryText =
+                    itineraryText +
+                    `\t${event.title}: ${event.startsAt} - ${event.endsAt}\n\t${event.note}\n\n`; // You might want to use momentjs for the dates
+            });
+
+            doc.font('fonts/PalatinoBold.ttf')
+                .fontSize(25)
+                .text(itineraryText, 100, 100); // Also this, what is the 100, 100?
+
+            doc.end();
+        }
     }
 
     @Authorized()
