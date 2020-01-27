@@ -42,6 +42,7 @@
         "koa-router": "^7.4.0",
         "moment": "^2.24.0",
         "nodemon": "^2.0.2",
+        "pdfkit": "^0.11.0",
         "pg": "^7.14.0",
         "routing-controllers": "^0.8.0",
         "routing-controllers-openapi": "^1.8.0",
